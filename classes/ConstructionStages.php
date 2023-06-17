@@ -123,15 +123,10 @@ class ConstructionStages
             return;
         }
         $constructionStage['status'] = 'DELETED';
-        $this->patch($id, $constructionStage);
+        $this->patch($id, new ConstructionStagesUpdate($constructionStage));
 
         // Başarılı yanıtı döndür
         http_response_code(200);
         echo json_encode(array('message' => 'Construction stage deleted successfully'));
     }
-
-
-
-
-
 }
