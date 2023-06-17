@@ -5,24 +5,24 @@ new Api();
 
 class Api
 {
-	private static $db;
+    private static $db;
 
-	public static function getDb()
-	{
-		return self::$db;
-	}
+    public static function getDb()
+    {
+        return self::$db;
+    }
 
-	public function __construct()
-	{
-		self::$db = (new Database())->init();
+    public function __construct()
+    {
+        self::$db = (new Database())->init();
 
-		$uri = strtolower(trim((string)$_SERVER['PATH_INFO'], '/'));
-		$httpVerb = isset($_SERVER['REQUEST_METHOD']) ? strtolower($_SERVER['REQUEST_METHOD']) : 'cli';
+        $uri = strtolower(trim((string)$_SERVER['PATH_INFO'], '/'));
+        $httpVerb = isset($_SERVER['REQUEST_METHOD']) ? strtolower($_SERVER['REQUEST_METHOD']) : 'cli';
 
-		$wildcards = [
-			':any' => '[^/]+',
-			':num' => '[0-9]+',
-		];
+        $wildcards = [
+            ':any' => '[^/]+',
+            ':num' => '[0-9]+',
+        ];
         $routes = [
             'get constructionStages' => [
                 'class' => 'ConstructionStages',
@@ -35,7 +35,7 @@ class Api
             'post constructionStages' => [
                 'class' => 'ConstructionStages',
                 'method' => 'post',
-                'bodyType' => 'ConstructionStagesCreate'
+                'bodyType' => 'ConstructionStagesCreate',
             ],
             'patch constructionStages/(:num)' => [
                 'class' => 'ConstructionStages',
@@ -52,24 +52,43 @@ class Api
 			'error' => 'No such route',
 		];
 
-		if ($uri) {
+        if ($uri) {
+            foreach ($routes as $pattern => $target) {
+                $pattern = str_replace(array_keys($wildcards), array_values($wildcards), $pattern);
+                if (preg_match('#^'.$pattern.'$#i', "{$httpVerb} {$uri}", $matches)) {
+                    $params = [];
+                    array_shift($matches);
+                    preg_replace_callback('#'.implode('|', array_keys($wildcards)).'#', function ($matches) use (&$params) {
+                        if (isset($matches[1])) {
+                            $params[] = $matches[1];
+                        }
+                    }, $pattern);
 
-			foreach ($routes as $pattern => $target) {
-				$pattern = str_replace(array_keys($wildcards), array_values($wildcards), $pattern);
-				if (preg_match('#^'.$pattern.'$#i', "{$httpVerb} {$uri}", $matches)) {
-					$params = [];
-					array_shift($matches);
-					if ($httpVerb === 'post') {
-						$data = json_decode(file_get_contents('php://input'));
-						$params = [new $target['bodyType']($data)];
-					}
-					$params = array_merge($params, $matches);
-					$response = call_user_func_array([new $target['class'], $target['method']], $params);
-					break;
-				}
-			}
+                    if (isset($target['bodyType'])) {
+                        $data = json_decode(file_get_contents('php://input'));
+                        if (!$data instanceof $target['bodyType']) {
+                            http_response_code(400);
+                            echo json_encode(array('message' => 'Geçersiz istek veri yapısı'));
+                            return;
+                        }
+                        $params[] = $data;
+                    }
 
-			echo json_encode($response, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
-		}
-	}
+                    $class = $target['class'];
+                    $method = $target['method'];
+
+                    if (class_exists($class)) {
+                        $instance = new $class();
+                        if (method_exists($instance, $method)) {
+                            call_user_func_array([$instance, $method], $params);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        echo json_encode($response);
+    }
 }
+
