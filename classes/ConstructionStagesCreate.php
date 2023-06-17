@@ -26,4 +26,8 @@ class ConstructionStagesCreate
 			}
 		}
 	}
+    public function validate()
+    {
+        return ConstructionStagesValidation::validate($this);
+    }
 }
