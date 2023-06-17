@@ -47,10 +47,9 @@ class Api
             ],
         ];
 
-
-		$response = [
-			'error' => 'No such route',
-		];
+        $response = [
+            'error' => 'Route not found',
+        ];
 
         if ($uri) {
             foreach ($routes as $pattern => $target) {
@@ -68,7 +67,7 @@ class Api
                         $data = json_decode(file_get_contents('php://input'));
                         if (!$data instanceof $target['bodyType']) {
                             http_response_code(400);
-                            echo json_encode(array('message' => 'Geçersiz istek veri yapısı'));
+                            echo json_encode(array('message' => 'Invalid request data structure'));
                             return;
                         }
                         $params[] = $data;
@@ -91,4 +90,3 @@ class Api
         echo json_encode($response);
     }
 }
-
