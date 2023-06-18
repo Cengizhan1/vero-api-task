@@ -108,25 +108,19 @@ class ConstructionStages
             'externalId' => $constructionStage[0]['externalId'],
             'status' => $constructionStage[0]['status'],
         ]);
-
-        // Return a success response
-        http_response_code(200);
-        echo json_encode(array('message' => 'Construction stage updated successfully'));
     }
 
     public function delete($id)
     {
+
         $constructionStage = $this->getSingle($id);
         if (empty($constructionStage)) {
             http_response_code(404);
             echo json_encode(array('message' => 'Construction stage not found'));
             return;
         }
-        $constructionStage['status'] = 'DELETED';
-        $this->patch($id, new ConstructionStagesUpdate($constructionStage));
+        $constructionStage[0]['status'] = 'DELETED';
+        $this->patch($id, new ConstructionStagesUpdate($constructionStage[0]));
 
-        // Başarılı yanıtı döndür
-        http_response_code(200);
-        echo json_encode(array('message' => 'Construction stage deleted successfully'));
     }
 }

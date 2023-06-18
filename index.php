@@ -40,6 +40,8 @@ class Api
             'patch constructionStages/(:num)' => [
                 'class' => 'ConstructionStages',
                 'method' => 'patch',
+                'bodyType' => 'ConstructionStagesUpdate',
+
             ],
             'delete constructionStages/(:num)' => [
                 'class' => 'ConstructionStages',
@@ -52,39 +54,24 @@ class Api
         ];
 
         if ($uri) {
+
             foreach ($routes as $pattern => $target) {
                 $pattern = str_replace(array_keys($wildcards), array_values($wildcards), $pattern);
                 if (preg_match('#^'.$pattern.'$#i', "{$httpVerb} {$uri}", $matches)) {
                     $params = [];
                     array_shift($matches);
-                    preg_replace_callback('#'.implode('|', array_keys($wildcards)).'#', function ($matches) use (&$params) {
-                        if (isset($matches[1])) {
-                            $params[] = $matches[1];
-                        }
-                    }, $pattern);
-
-                    if (isset($target['bodyType'])) {
+                    if ($httpVerb === 'post' || $httpVerb === 'patch') {
                         $data = json_decode(file_get_contents('php://input'));
-                        if (!$data instanceof $target['bodyType']) {
-                            http_response_code(400);
-                            echo json_encode(array('message' => 'Invalid request data structure'));
-                            return;
-                        }
-                        $params[] = $data;
+                        $params = [new $target['bodyType']($data)];
+                        var_dump($params);
                     }
-
-                    $class = $target['class'];
-                    $method = $target['method'];
-
-                    if (class_exists($class)) {
-                        $instance = new $class();
-                        if (method_exists($instance, $method)) {
-                            call_user_func_array([$instance, $method], $params);
-                            return;
-                        }
-                    }
+                    $params = array_merge($params, $matches);
+                    $response = call_user_func_array([new $target['class'], $target['method']], $params);
+                    break;
                 }
             }
+
+            echo json_encode($response, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
         }
 
         echo json_encode($response);
