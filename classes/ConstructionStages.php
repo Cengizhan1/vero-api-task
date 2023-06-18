@@ -1,14 +1,28 @@
 <?php
 
+/**
+ * The ConstructionStages class performs operations related to construction stages.
+ */
 class ConstructionStages
 {
+    /**
+     * @var PDO The database connection.
+     */
     private $db;
 
+    /**
+     * Constructs an instance of the ConstructionStages class.
+     */
     public function __construct()
     {
         $this->db = Api::getDb();
     }
 
+    /**
+     * Retrieves all construction stages.
+     *
+     * @return array The array of construction stages.
+     */
     public function getAll()
     {
         $stmt = $this->db->prepare("
@@ -28,6 +42,12 @@ class ConstructionStages
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Retrieves a single construction stage by ID.
+     *
+     * @param int $id The ID of the construction stage.
+     * @return array The array containing the information of the construction stage, or null if not found.
+     */
     public function getSingle($id)
     {
         $stmt = $this->db->prepare("
@@ -48,6 +68,12 @@ class ConstructionStages
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Creates a new construction stage.
+     *
+     * @param ConstructionStagesCreate $data The object containing the data of the construction stage to be created.
+     * @return array The newly created construction stage's information.
+     */
     public function post(ConstructionStagesCreate $data)
     {
         $stmt = $this->db->prepare("
@@ -68,7 +94,12 @@ class ConstructionStages
         return $this->getSingle($this->db->lastInsertId());
     }
 
-
+    /**
+     * Updates a construction stage.
+     *
+     * @param int $id The ID of the construction stage to be updated.
+     * @param ConstructionStagesUpdate $data The object containing the update data.
+     */
     public function patch($id, ConstructionStagesUpdate $data)
     {
         $constructionStage = $this->getSingle($id);
@@ -110,9 +141,13 @@ class ConstructionStages
         ]);
     }
 
+    /**
+     * Deletes a construction stage.
+     *
+     * @param int $id The ID of the construction stage to be deleted.
+     */
     public function delete($id)
     {
-
         $constructionStage = $this->getSingle($id);
         if (empty($constructionStage)) {
             http_response_code(404);
@@ -121,6 +156,5 @@ class ConstructionStages
         }
         $constructionStage[0]['status'] = 'DELETED';
         $this->patch($id, new ConstructionStagesUpdate($constructionStage[0]));
-
     }
 }

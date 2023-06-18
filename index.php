@@ -3,15 +3,33 @@ require_once 'Autoloader.php';
 Autoloader::register();
 new Api();
 
+/**
+ * Class Api
+ *
+ * This class represents the API handler.
+ */
 class Api
 {
+    /**
+     * @var mixed The database instance.
+     */
     private static $db;
 
+    /**
+     * Get the database instance.
+     *
+     * @return mixed The database instance.
+     */
     public static function getDb()
     {
         return self::$db;
     }
 
+    /**
+     * Api constructor.
+     *
+     * Initializes the API handler and processes the requests.
+     */
     public function __construct()
     {
         self::$db = (new Database())->init();
@@ -41,7 +59,6 @@ class Api
                 'class' => 'ConstructionStages',
                 'method' => 'patch',
                 'bodyType' => 'ConstructionStagesUpdate',
-
             ],
             'delete constructionStages/(:num)' => [
                 'class' => 'ConstructionStages',
@@ -54,7 +71,6 @@ class Api
         ];
 
         if ($uri) {
-
             foreach ($routes as $pattern => $target) {
                 $pattern = str_replace(array_keys($wildcards), array_values($wildcards), $pattern);
                 if (preg_match('#^'.$pattern.'$#i', "{$httpVerb} {$uri}", $matches)) {

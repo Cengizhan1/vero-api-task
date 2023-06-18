@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Class ConstructionStagesCreate
+ *
+ * This class represents the data structure used to create a new construction stage.
+ */
 class ConstructionStagesCreate
 {
     public $name;
@@ -11,6 +16,11 @@ class ConstructionStagesCreate
     public $externalId;
     public $status;
 
+    /**
+     * ConstructionStagesCreate constructor.
+     *
+     * @param object|null $data An object containing the creation data.
+     */
     public function __construct($data)
     {
         if (is_object($data)) {
@@ -24,6 +34,11 @@ class ConstructionStagesCreate
         }
     }
 
+    /**
+     * Validates the construction stage data.
+     *
+     * @return array True if the data is valid, false otherwise.
+     */
     public function validate()
     {
         return ConstructionStagesValidation::validate($this);
